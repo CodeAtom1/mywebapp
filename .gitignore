@@ -1,0 +1,72 @@
+# .NET build artifacts
+bin/
+obj/
+out/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+*.vspscc
+*.user
+*.suo
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Visual Studio & Rider
+.vs/
+.idea/
+*.swp
+*.sln.iml
+
+# JetBrains Rider
+*.iml
+
+# User-specific files
+*.user
+*.rsuser
+*.userosscache
+
+# Secrets & configs
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# dotnet user-secrets folder
+**/secrets.json
+**/.microsoft/usersecrets/
+
+# Logs
+logs/
+*.log
+
+# Coverage / test results
+*.coverage
+*.coveragexml
+TestResult.xml
+TestResults/
+coverage/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+*.pid
+*.seed
+*.bak
+
+# Node / React (if frontend included)
+node_modules/
+dist/
+build/
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Git
+*.orig

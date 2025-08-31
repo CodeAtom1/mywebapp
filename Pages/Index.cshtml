@@ -1,0 +1,25 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "To-Do List";
+}
+
+<h1>Your To-Do List</h1>
+
+<form method="post" asp-page-handler="Add">
+    <input type="text" name="title" placeholder="Add a new task..." required />
+    <button type="submit">Add</button>
+</form>
+
+<ul>
+    @foreach (var item in Model.TodoItems)
+    {
+        <li>
+            <input type="checkbox" asp-for="@item.IsCompleted" />
+            <span>@item.Title</span>
+            <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+    }
+</ul>
