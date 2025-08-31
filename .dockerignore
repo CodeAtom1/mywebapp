@@ -4,18 +4,6 @@
 *.DS_Store
 Thumbs.db
 
-# Node.js (if applicable)
-node_modules
-npm-debug.log
-yarn.lock
-pnpm-lock.yaml
-
-# Python (if applicable)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pytest_cache/
 
 # .NET (if applicable)
 bin/
