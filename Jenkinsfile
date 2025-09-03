@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    options {
+        ansiColor('xterm')
+    }
+    
     environment {
         DB_CONN    = credentials('MySqlConnectionString')
         REDIS_CONN = credentials('RedisConnectionString')
