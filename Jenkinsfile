@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/CodeAtom1/mywebapp'
+                git branch: 'main', url: 'https://github.com/CodeAtom1/mywebapp'
             }
         }
 
