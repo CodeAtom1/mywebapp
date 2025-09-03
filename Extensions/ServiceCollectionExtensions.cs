@@ -111,6 +111,7 @@ public static class ServiceCollectionExtensions
 
         return builder.Services;
     }
+    
     public static async Task ConfigureDatabaseSeeding(this WebApplication app)
     {
         // Ensure DB is created/migrated (optional: prefer CI/CD migrations instead)
