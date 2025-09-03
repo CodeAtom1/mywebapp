@@ -2,21 +2,25 @@ pipeline {
     agent any
     
     environment {
-        REGISTRY = "<your-dockerhub-username>",
-        IMAGE = "mywebapp",
-        TAG = "latest"
+        DB_CONN    = credentials('MySqlConnectionString')
+        REDIS_CONN = credentials('RedisConnectionString')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git '<repo-url-here>'
+                git 'https://github.com/CodeAtom1/mywebapp'
             }
         }
 
         stage('Build') {
             steps {
-                sh "docker build -t $REGISTRY/$IMAGE:$TAG ."
+                sh '''
+                    docker run -d \
+                        -e ConnectionStrings__DefaultConnection="$DB_CONN" \
+                        -e Redis__Configuration="$REDIS_CONN" \
+                        -p 8090:80 mywebapp:latest
+                '''
             }
         }
 

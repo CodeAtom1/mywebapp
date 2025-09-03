@@ -2,12 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore as distinct layers
+# Copy csproj and restore
 COPY *.sln .
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy everything else and build
+# Copy everything else and publish release build output in /app/publish
 COPY . ./
 RUN dotnet publish -c Release -o /app/publish
 
