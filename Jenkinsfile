@@ -1,13 +1,12 @@
 pipeline {
     agent any
     
-    options {
-        ansiColor('xterm')
-    }
-    
     environment {
         DB_CONN    = credentials('MySqlConnectionString')
         REDIS_CONN = credentials('RedisConnectionString')
+        REGISTRY = "docker.io"
+        IMAGE = "mywebapp"
+        TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -16,27 +15,79 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/CodeAtom1/mywebapp'
             }
         }
-
-        stage('Build') {
+       
+        stage('Build Image') {
             steps {
-                sh '''
-                    docker run -d \
-                        -e ConnectionStrings__DefaultConnection="$DB_CONN" \
-                        -e Redis__Configuration="$REDIS_CONN" \
-                        -p 8090:80 mywebapp:latest
-                '''
+                sh """
+                    docker build -t $REGISTRY/$IMAGE:$TAG .
+                """
             }
         }
 
-        stage('Push') {
+        stage('Test Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
-                usernameVariable: 'DOCKERHUB_USERNAME', 
-                passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh "echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin"
-                    sh "docker push $REGISTRY/$IMAGE:$TAG"
+                sh """
+                    # Run container for smoke test
+                    CID=$(docker run -d \
+                        -e ConnectionStrings__DefaultConnection="$DB_CONN" \
+                        -e Redis__Configuration="$REDIS_CONN" \
+                        -p 8090:80 $REGISTRY/$IMAGE:$TAG)
+
+                    echo "Started container: $CID"
+                    
+                    # Wait for app to boot
+                    sleep 10
+
+                    # Health check (adjust endpoint)
+                    docker exec $CID curl -f http://localhost:80/health || (echo "Health check failed" && exit 1)
+
+                    # Cleanup
+                    docker stop $CID
+                """
+            }
+        }
+
+      stage('Push Image') {
+        steps {
+            script {
+                def pushImage = { tag ->
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_PASSWORD'
+                    )]) {
+                        sh """
+                            echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin
+                            docker tag $REGISTRY/$IMAGE:$TAG $REGISTRY/$IMAGE:${tag}
+                            docker push $REGISTRY/$IMAGE:${tag}
+                        """
+                    }
+                }
+
+                pushImage(TAG)
+                if (env.BRANCH_NAME == "main") {
+                    pushImage("latest")
                 }
             }
+        }
+    }
+
+        stage('Deploy') {
+            steps {
+                sh """
+                    echo "Deploying $REGISTRY/$IMAGE:$TAG ..."
+                    docker run -d -p 8090:80 $REGISTRY/$IMAGE:$TAG
+                    # Example: docker-compose or kubectl
+                    # docker-compose -f docker-compose.prod.yml up -d
+                    # or: kubectl set image deployment/mywebapp mywebapp=$REGISTRY/$IMAGE:$TAG
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            sh "docker logout || true"
         }
     }
 }

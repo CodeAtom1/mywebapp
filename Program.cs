@@ -5,6 +5,7 @@ using MyWebApp.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddHealthChecks();
 builder.Services.AddRazorPages();
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -18,7 +19,6 @@ builder.AddApplicationCookies();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-
 var app = builder.Build();
 
 await app.ConfigureDatabaseSeeding();
@@ -37,6 +37,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
 app.MapRazorPages();
 
 app.Run();
