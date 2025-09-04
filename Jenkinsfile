@@ -75,13 +75,13 @@ pipeline {
                             usernameVariable: 'DOCKERHUB_USERNAME',
                             passwordVariable: 'DOCKERHUB_PASSWORD'
                         )]) {
-                            sh """
+                            sh '''
                                 echo "Debug: DockerHub username = $DOCKERHUB_USERNAME"
                                 echo "Debug: Password length = ${#DOCKERHUB_PASSWORD}"
-                                echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin
+                                echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
                                 docker tag $REGISTRY/$IMAGE:$TAG $REGISTRY/$IMAGE:${tag}
                                 docker push $REGISTRY/$IMAGE:${tag}
-                            """
+                            '''
                         }
                     }
 
