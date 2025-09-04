@@ -39,7 +39,7 @@ pipeline {
                     CID=\$(docker run -d \
                         -e ConnectionStrings__DefaultConnection="$DB_CONN" \
                         -e Redis__Configuration="$REDIS_CONN" \
-                        -p 8090:80 $REGISTRY/$IMAGE:$TAG)
+                        -p 8090:5001 $REGISTRY/$IMAGE:$TAG)
 
                     echo "Started container: \$CID"
 
