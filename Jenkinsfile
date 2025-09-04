@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DB_CONN    = credentials('MySqlConnectionString')
-        REDIS_CONN = credentials('RedisConnectionString')
         REGISTRY = 'docker.io'
         IMAGE = 'mywebapp'
         TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
@@ -24,34 +22,47 @@ pipeline {
             }
         }
 
-        stage('Test Image') {
+        stage('Run & Health Check') {
             steps {
-                sh """
-                    # Free port 8090 if in use by a container
-                    EXISTING_CID=\$(docker ps -q --filter "publish=8090")
+                withCredentials([
+                    string(credentialsId: 'MySqlConnectionString', variable: 'DB_CONN'),
+                    string(credentialsId: 'RedisConnectionString', variable: 'REDIS_CONN')
+                ]) {
+                    sh '''
+                        # Free port 8090 if in use by a container
+                        EXISTING_CID=$(docker ps -q --filter "publish=8090")
+                        if [ -n "$EXISTING_CID" ]; then
+                            echo "Stopping container on port 8090 (CID: $EXISTING_CID)"
+                            docker stop "$EXISTING_CID" && docker rm "$EXISTING_CID"
+                        fi
 
-                    if [ -n "\$EXISTING_CID" ]; then
-                        echo "Stopping container on port 8090 (CID: \$EXISTING_CID)"
-                        docker stop "\$EXISTING_CID" && docker rm "\$EXISTING_CID"
-                    fi
+                        # Run container with secrets from Jenkins credentials
+                        CID=$(docker run -d \
+                            -e ConnectionStrings__DefaultConnection=$DB_CONN \
+                            -e Redis__Configuration=$REDIS_CONN \
+                            -p 8090:80 $REGISTRY/$IMAGE:$TAG)
 
-                    # Run container for smoke test
-                    CID=\$(docker run -d \
-                        -e ConnectionStrings__DefaultConnection="$DB_CONN" \
-                        -e Redis__Configuration="$REDIS_CONN" \
-                        -p 8090:5001 $REGISTRY/$IMAGE:$TAG)
+                        echo "Started container: $CID"
 
-                    echo "Started container: \$CID"
+                        # Wait for app to boot
+                        sleep 15
 
-                    # Wait for app to boot
-                    sleep 10
+                        # Health check with retries
+                        for i in {1..5}; do
+                        if curl -f http://localhost:8090/health; then
+                            echo "Health check passed"
+                            docker stop $CID && docker rm $CID
+                            exit 0
+                        fi
+                        echo "Health check failed, retrying in 5s..."
+                        sleep 5
+                        done
 
-                    # Health check (adjust endpoint)
-                    curl -f http://localhost:8090/health || (echo "Health check failed" && exit 1)
-
-                    # Cleanup
-                    docker stop \$CID
-                """
+                        echo "Health check failed after retries"
+                        docker stop $CID && docker rm $CID
+                        exit 1
+                    '''
+                }
             }
         }
 
