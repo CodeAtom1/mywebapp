@@ -27,6 +27,14 @@ pipeline {
         stage('Test Image') {
             steps {
                 sh """
+                    # Free port 8090 if in use by a container
+                    EXISTING_CID=$(docker ps -q --filter "publish=8090")
+
+                    if [ -n "$EXISTING_CID" ]; then
+                        echo "Stopping container on port 8090 (CID: $EXISTING_CID)"
+                        docker stop "$EXISTING_CID" && docker rm "$EXISTING_CID"
+                    fi
+
                     # Run container for smoke test
                     CID=\$(docker run -d \
                         -e ConnectionStrings__DefaultConnection="$DB_CONN" \
