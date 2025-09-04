@@ -47,7 +47,7 @@ pipeline {
                     sleep 10
 
                     # Health check (adjust endpoint)
-                    docker exec \$CID curl -f http://localhost:80/health || (echo "Health check failed" && exit 1)
+                    curl -f http://localhost:8090/health || (echo "Health check failed" && exit 1)
 
                     # Cleanup
                     docker stop \$CID
