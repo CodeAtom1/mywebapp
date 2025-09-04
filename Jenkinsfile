@@ -40,7 +40,7 @@ pipeline {
                         CID=$(docker run -d \
                             -e ConnectionStrings__DefaultConnection=$DB_CONN \
                             -e Redis__Configuration=$REDIS_CONN \
-                            -p 8090:80 $REGISTRY/$IMAGE:$TAG)
+                            -p 8090:5001 $REGISTRY/$IMAGE:$TAG)
 
                         echo "Started container: $CID"
 
@@ -95,7 +95,7 @@ pipeline {
             steps {
                 sh """
                     echo "Deploying $REGISTRY/$IMAGE:$TAG ..."
-                    docker run -d -p 8090:80 $REGISTRY/$IMAGE:$TAG
+                    docker run -d -p 8090:5001 $REGISTRY/$IMAGE:$TAG
                     # Example: docker-compose or kubectl
                     # docker-compose -f docker-compose.prod.yml up -d
                     # or: kubectl set image deployment/mywebapp mywebapp=$REGISTRY/$IMAGE:$TAG
