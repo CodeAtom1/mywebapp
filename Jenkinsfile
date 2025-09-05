@@ -75,11 +75,11 @@ pipeline {
                             usernameVariable: 'DOCKERHUB_USERNAME',
                             passwordVariable: 'DOCKERHUB_PASSWORD'
                         )]) {
-                            sh '''
-                                echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-                                docker tag $REGISTRY/$IMAGE:$TAG $REGISTRY/$IMAGE:${tag}
-                                docker push $REGISTRY/$IMAGE:${tag}
-                            '''
+                            sh """
+                                echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin
+                                docker tag \$REGISTRY/\$IMAGE:\$TAG \$REGISTRY/$IMAGE:${tag}
+                                docker push \$REGISTRY/\$IMAGE:${tag}
+                            """
                         }
                     }
 
@@ -93,13 +93,13 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh """
+                sh '''
                     echo "Deploying $REGISTRY/$IMAGE:$TAG ..."
                     docker run -d -p 8090:5001 $REGISTRY/$IMAGE:$TAG
                     # Example: docker-compose or kubectl
                     # docker-compose -f docker-compose.prod.yml up -d
                     # or: kubectl set image deployment/mywebapp mywebapp=$REGISTRY/$IMAGE:$TAG
-                """
+                '''
             }
         }
     }
