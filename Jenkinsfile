@@ -4,7 +4,6 @@ pipeline {
     environment {
         REGISTRY = 'docker.io/gourav8'
         IMAGE = 'mywebapp'
-        TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -16,9 +15,10 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                sh """
-                    docker build -t $REGISTRY/$IMAGE:$TAG .
-                """
+                script {
+                    env.TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                    sh "docker build -t $REGISTRY/$IMAGE:$TAG ."
+                }
             }
         }
 
