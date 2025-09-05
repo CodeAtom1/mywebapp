@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = 'docker.io'
+        REGISTRY = 'docker.io/gourav8'
         IMAGE = 'mywebapp'
         TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
@@ -76,8 +76,6 @@ pipeline {
                             passwordVariable: 'DOCKERHUB_PASSWORD'
                         )]) {
                             sh '''
-                                echo "Debug: DockerHub username = $DOCKERHUB_USERNAME"
-                                echo "Debug: Password length = ${#DOCKERHUB_PASSWORD}"
                                 echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
                                 docker tag $REGISTRY/$IMAGE:$TAG $REGISTRY/$IMAGE:${tag}
                                 docker push $REGISTRY/$IMAGE:${tag}
