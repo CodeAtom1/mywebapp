@@ -83,7 +83,7 @@ pipeline {
                         }
                     }
 
-                    pushImage(TAG)
+                    pushImage(env.TAG)
                     if (env.BRANCH_NAME == "main") {
                         pushImage("latest")
                     }
