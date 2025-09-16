@@ -91,15 +91,35 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        // stage('Deploy') {
+        //     steps {
+        //         sh '''
+        //             echo "Deploying $REGISTRY/$IMAGE:$TAG ..."
+        //             docker run -d -p 8090:5001 $REGISTRY/$IMAGE:$TAG
+        //             # Example: docker-compose or kubectl
+        //             # docker-compose -f docker-compose.prod.yml up -d
+        //             # or: kubectl set image deployment/mywebapp mywebapp=$REGISTRY/$IMAGE:$TAG
+        //         '''
+        //     }
+        // }
+        stage('Deploy with Helm') {
             steps {
-                sh '''
-                    echo "Deploying $REGISTRY/$IMAGE:$TAG ..."
-                    docker run -d -p 8090:5001 $REGISTRY/$IMAGE:$TAG
-                    # Example: docker-compose or kubectl
-                    # docker-compose -f docker-compose.prod.yml up -d
-                    # or: kubectl set image deployment/mywebapp mywebapp=$REGISTRY/$IMAGE:$TAG
-                '''
+                withCredentials([
+                    string(credentialsId: 'MySqlConnectionString', variable: 'DB_CONN'),
+                    string(credentialsId: 'RedisConnectionString', variable: 'REDIS_CONN')
+                ]) {
+                    sh '''
+                        echo "Deploying $REGISTRY/$IMAGE:$TAG with Helm..."
+
+                        # Deploy or upgrade the Helm release
+                        helm upgrade --install mywebapp-release ./charts/mywebapp-chart \
+                            --set image.repository=$REGISTRY/$IMAGE \
+                            --set image.tag=$TAG \
+                            --set env.DB_CONN="$DB_CONN" \
+                            --set env.REDIS_CONN="$REDIS_CONN" \
+                            --namespace default --create-namespace
+                    '''     
+                }
             }
         }
     }
