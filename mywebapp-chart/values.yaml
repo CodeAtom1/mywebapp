@@ -1,1 +1,28 @@
 replicaCount: 2
+
+config:
+  ASP_CORE_ENVIRONMENT: "Production"
+
+image:
+  repository: "mywebapp"
+  tag: "1.0.0"
+
+resources:
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+
+service:
+  name: "mywebapp-service"
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  port: 80
+  hosts:
+    - host: "mywebapp.example.com"
+      paths:
