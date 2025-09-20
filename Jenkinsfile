@@ -45,7 +45,7 @@ pipeline {
                         echo "Started container: $CID"
 
                         # Wait for app to boot
-                        sleep 15
+                        sleep 30
 
                         # Health check with retries
                         for i in {1..5}; do
@@ -53,6 +53,10 @@ pipeline {
                             echo "Health check passed"
                             docker stop $CID && docker rm $CID
                             exit 0
+                        else
+                            echo "❌ Health check failed"
+                            docker logs $CID
+                            docker exec $CID ss -tuln || true
                         fi
                         echo "Health check failed, retrying in 5s..."
                         sleep 5
