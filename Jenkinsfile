@@ -33,6 +33,7 @@ pipeline {
                         --set auth.rootPassword="$DB_PASSWORD" \
                         --set auth.database="$DB_NAME" \
                         --namespace ci \
+                        --create-namespace \
                         --wait
                     '''
                 }
