@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REGISTRY = 'docker.io/gourav8'
-        IMAGE = 'mywebapp',
+        IMAGE = 'mywebapp'
         DB_NAME = 'MyWebApp'
     }
 
