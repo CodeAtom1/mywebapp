@@ -3,13 +3,31 @@ pipeline {
 
     environment {
         REGISTRY = 'docker.io/gourav8'
-        IMAGE = 'mywebapp'
+        IMAGE = 'mywebapp',
+        DB_NAME = 'MyWebApp'
     }
 
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/CodeAtom1/mywebapp'
+            }
+        }
+
+        stage('Deploy MySQL') {
+            steps {
+                    withCredentials([
+                        string(credentialsId: 'MySqlPassword', variable: 'DB_PASSWORD'),
+                        string(credentialsId: 'RedisConnectionString', variable: 'REDIS_CONN')
+                    ]) {
+                    sh """
+                        helm upgrade --install my-mysql bitnami/mysql \
+                        --set auth.rootPassword=$DB_PASSWORD \
+                        --set auth.database=$DB_NAME \
+                        --namespace ci \
+                        --wait
+                    """
+                }
             }
         }
 
@@ -25,7 +43,7 @@ pipeline {
         stage('Run & Health Check') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'MySqlConnectionString', variable: 'DB_CONN'),
+                    string(credentialsId: 'MySqlPassword', variable: 'DB_PASSWORD'),
                     string(credentialsId: 'RedisConnectionString', variable: 'REDIS_CONN')
                 ]) {
                     sh '''
@@ -38,7 +56,7 @@ pipeline {
 
                         # Run container with secrets from Jenkins credentials
                         CID=$(docker run -d \
-                            -e ConnectionStrings__DefaultConnection=$DB_CONN \
+                            -e ConnectionStrings__DefaultConnection="Server=my-mysql.ci.svc.cluster.local;Port=3306;Database=$DB_NAME;User=root;Password=$DB_PASSWORD;" \
                             -e Redis__Configuration=$REDIS_CONN \
                             -p 8090:5001 $REGISTRY/$IMAGE:$TAG)
 
