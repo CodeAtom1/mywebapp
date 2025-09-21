@@ -14,6 +14,15 @@ pipeline {
             }
         }
 
+        stage('Setup Helm Repos') {
+            steps {
+                sh '''
+                    helm repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
+                    helm repo update
+                '''
+            }
+        }
+        
         stage('Deploy MySQL') {
             steps {
                     withCredentials([
@@ -131,10 +140,6 @@ pipeline {
                 ]) {
                     sh '''
                         echo "Deploying $REGISTRY/$IMAGE:$TAG with Helm..."
-
-                        # Add Bitnami repo if not already added
-                        helm repo add bitnami https://charts.bitnami.com/bitnami
-                        helm repo update
 
                         # Deploy or upgrade the Helm release
                         helm upgrade --install mywebapp-release ./charts/mywebapp-chart \
