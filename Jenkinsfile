@@ -19,13 +19,13 @@ pipeline {
                     withCredentials([
                         string(credentialsId: 'MySqlPassword', variable: 'DB_PASSWORD')
                     ]) {
-                    sh """
+                    sh '''
                         helm upgrade --install my-mysql bitnami/mysql \
-                        --set auth.rootPassword=${DB_PASSWORD} \
-                        --set auth.database=$DB_NAME \
+                        --set auth.rootPassword="$DB_PASSWORD" \
+                        --set auth.database="$DB_NAME" \
                         --namespace ci \
                         --wait
-                    """
+                    '''
                 }
             }
         }
@@ -55,8 +55,8 @@ pipeline {
 
                         # Run container with secrets from Jenkins credentials
                         CID=$(docker run -d \
-                            -e ConnectionStrings__DefaultConnection="Server=my-mysql.ci.svc.cluster.local;Port=3306;Database=$DB_NAME;User=root;Password=${DB_PASSWORD};" \
-                            -e Redis__Configuration=${REDIS_CONN} \
+                            -e ConnectionStrings__DefaultConnection="Server=my-mysql.ci.svc.cluster.local;Port=3306;Database=$DB_NAME;User=root;Password=$DB_PASSWORD;" \
+                            -e Redis__Configuration="$REDIS_CONN" \
                             -p 8090:5001 $REGISTRY/$IMAGE:$TAG)
 
                         echo "Started container: $CID"
