@@ -17,12 +17,11 @@ pipeline {
         stage('Deploy MySQL') {
             steps {
                     withCredentials([
-                        string(credentialsId: 'MySqlPassword', variable: 'DB_PASSWORD'),
-                        string(credentialsId: 'RedisConnectionString', variable: 'REDIS_CONN')
+                        string(credentialsId: 'MySqlPassword', variable: 'DB_PASSWORD')
                     ]) {
                     sh """
                         helm upgrade --install my-mysql bitnami/mysql \
-                        --set auth.rootPassword=$DB_PASSWORD \
+                        --set auth.rootPassword=${DB_PASSWORD} \
                         --set auth.database=$DB_NAME \
                         --namespace ci \
                         --wait
@@ -56,8 +55,8 @@ pipeline {
 
                         # Run container with secrets from Jenkins credentials
                         CID=$(docker run -d \
-                            -e ConnectionStrings__DefaultConnection="Server=my-mysql.ci.svc.cluster.local;Port=3306;Database=$DB_NAME;User=root;Password=$DB_PASSWORD;" \
-                            -e Redis__Configuration=$REDIS_CONN \
+                            -e ConnectionStrings__DefaultConnection="Server=my-mysql.ci.svc.cluster.local;Port=3306;Database=$DB_NAME;User=root;Password=${DB_PASSWORD};" \
+                            -e Redis__Configuration=${REDIS_CONN} \
                             -p 8090:5001 $REGISTRY/$IMAGE:$TAG)
 
                         echo "Started container: $CID"
@@ -127,7 +126,7 @@ pipeline {
         stage('Deploy with Helm') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'MySqlConnectionString', variable: 'DB_CONN'),
+                    string(credentialsId: 'MySqlPassword', variable: 'DB_PASSWORD'),
                     string(credentialsId: 'RedisConnectionString', variable: 'REDIS_CONN')
                 ]) {
                     sh '''
@@ -137,8 +136,8 @@ pipeline {
                         helm upgrade --install mywebapp-release ./charts/mywebapp-chart \
                             --set image.repository=$REGISTRY/$IMAGE \
                             --set image.tag=$TAG \
-                            --set env.DB_CONN="$DB_CONN" \
-                            --set env.REDIS_CONN="$REDIS_CONN" \
+                            --set env.DB_CONN="Server=my-mysql.ci.svc.cluster.local;Port=3306;Database=$DB_NAME;User=root;Password=${DB_PASSWORD};" \
+                            --set env.REDIS_CONN="${REDIS_CONN}" \
                             --namespace default --create-namespace
                     '''     
                 }
