@@ -132,6 +132,10 @@ pipeline {
                     sh '''
                         echo "Deploying $REGISTRY/$IMAGE:$TAG with Helm..."
 
+                        # Add Bitnami repo if not already added
+                        helm repo add bitnami https://charts.bitnami.com/bitnami
+                        helm repo update
+
                         # Deploy or upgrade the Helm release
                         helm upgrade --install mywebapp-release ./charts/mywebapp-chart \
                             --set image.repository=$REGISTRY/$IMAGE \
